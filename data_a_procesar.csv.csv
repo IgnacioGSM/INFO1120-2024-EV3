@@ -1,0 +1,11 @@
+﻿RUT,Nombre,Apellido,Profesion,Pais,Estado_Emocional,UTM_Easting,UTM_Northing,UTM_Zone_Number,UTM_Zone_Letter
+12345678-9,Juan,Perez,Programador,Chile,felicidad,635000,6250000,19,H
+23456789-0,Maria,Gonzalez,Abogado,Chile,estresado,643000,6260000,19,H
+34567890-1,Carlos,Sanchez,Profesor,Rusia,tranquilo,500000,6500000,37,V
+45678901-2,Lucia,Martinez,Cantante,Rusia,tranquilo,550000,6600000,37,V
+56789012-3,Pedro,Fernandez,Programador,Corea del Sur,tilteado,500000,4100000,52,S
+67890123-4,Laura,Rojas,Abogado,Corea del Sur,tilteado,510000,4200000,52,S
+78901234-5,Andres,Morales,Cantante,Corea del Sur,tilteado,520000,4300000,52,S
+89012345-6,Veronica,Castro,Abogado,Corea del Sur,tilteado,530000,4400000,52,S
+90123456-7,Ricardo,Alvarez,Programador,China,ansiedad,600000,3800000,50,R
+12345678-5,Sofia,Herrera,Programador,China,ansiedad,610000,3900000,50,R
