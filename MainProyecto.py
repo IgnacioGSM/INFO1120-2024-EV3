@@ -152,9 +152,26 @@ def on_scrollbar_move(*args):
 def leer_archivo_csv(ruta_archivo):
     try:
         datos = pd.read_csv(ruta_archivo)
-        mostrar_datos(datos)
     except Exception as e:
         print(f"Error al leer el archivo CSV: {e}")
+    else:
+        actualiza_graficos(datos)
+        mostrar_datos(datos)
+
+def actualiza_graficos(datos):
+    global combobox_left, profesiones, ax1, x, canvas1
+    combobox_left.configure(values=sorted(list(set(datos["Pais"]))))
+    combobox_left.set(combobox_left._values[0])
+
+    '''profesiones = sorted(list(set(datos["Profesion"])))
+    x = np.arange(len(profesiones))
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(profesiones)
+    if canvas1: canvas1.get_tk_widget().pack_forget()
+    canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
+    canvas1.draw()
+    canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)'''
+
 
 # Función para mostrar los datos en la tabla
 def mostrar_datos(datos):
