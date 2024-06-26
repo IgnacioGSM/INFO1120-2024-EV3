@@ -145,7 +145,7 @@ def seleccionar_archivo():
     archivo = filedialog.askopenfilename(filetypes=[("Archivos CSV", "*.csv")])
     if archivo:
         print(f"Archivo seleccionado: {archivo}")
-        mostrar_datos(archivo)
+        leer_archivo_csv(archivo) # antes: mostrar_datos(archivo)
 def on_scrollbar_move(*args):
     canvas.yview(*args)
     canvas.bbox("all")
