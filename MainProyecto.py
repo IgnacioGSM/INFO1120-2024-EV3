@@ -151,6 +151,7 @@ def on_scrollbar_move(*args):
     canvas.bbox("all")
 def leer_archivo_csv(ruta_archivo):
     try:
+        global datos
         datos = pd.read_csv(ruta_archivo)
     except Exception as e:
         print(f"Error al leer el archivo CSV: {e}")
@@ -159,9 +160,9 @@ def leer_archivo_csv(ruta_archivo):
         mostrar_datos(datos)
 
 def actualiza_graficos(datos):
-    global combobox_left, profesiones, ax1, x, canvas1
+    global combobox_left
     combobox_left.configure(values=sorted(list(set(datos["Pais"]))))
-    combobox_left.set(combobox_left._values[0])
+    combobox_left.set("Seleccione País")
 
     '''profesiones = sorted(list(set(datos["Profesion"])))
     x = np.arange(len(profesiones))
@@ -172,6 +173,27 @@ def actualiza_graficos(datos):
     canvas1.draw()
     canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)'''
 
+def update_grafico1(choice):
+    global datos, profesiones, x, y, fig1, ax1, canvas1
+    if not datos.empty:
+        data_pais = datos[datos["Pais"] == choice]
+
+        ax1.clear()
+        profesiones = sorted(list(set(data_pais["Profesion"])))
+        x = np.arange(len(profesiones))
+        y = []
+        for profesion in profesiones:
+            y.append(len(data_pais[data_pais["Profesion"] == profesion]))
+        ax1.bar(x, y)
+        ax1.set_xticks(x)
+        ax1.set_xticklabels(profesiones)
+        ax1.set_xlabel("Profesiones")
+        ax1.set_ylabel("Numero de profesionales")
+        ax1.set_title("Profesiones vs Paises")
+        if canvas1: canvas1.get_tk_widget().pack_forget()
+        canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
+        canvas1.draw()
+        canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
 # Función para mostrar los datos en la tabla
 def mostrar_datos(datos):
@@ -327,8 +349,10 @@ top_left_panel.pack(side=ctk.LEFT, fill=ctk.X, expand=True)
 top_right_panel = ctk.CTkFrame(top_frame)
 top_right_panel.pack(side=ctk.RIGHT, fill=ctk.X, expand=True)
 
+datos = pd.DataFrame()
+
 # Agregar un Combobox al panel superior izquierdo
-combobox_left = ctk.CTkComboBox(top_left_panel, values=["Opción 1", "Opción 2", "Opción 3"])
+combobox_left = ctk.CTkComboBox(top_left_panel, values=["Opción 1", "Opción 2", "Opción 3"],command=update_grafico1)
 combobox_left.pack(pady=20, padx=20)
 
 # Agregar un Combobox al panel superior derecho
