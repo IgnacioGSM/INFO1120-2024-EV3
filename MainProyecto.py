@@ -132,7 +132,7 @@ def calcular_distancia(RUT1,RUT2):
     pass
 def guardar_data(row_selector):
     print(row_selector.get())
-    print(row_selector.table.values)
+    #print(row_selector.table.values)
 def editar_panel(root):
     global toplevel_window
     if toplevel_window is None or not toplevel_window.winfo_exists():
@@ -210,6 +210,8 @@ def update_grafico2(choice):
 
 # Función para mostrar los datos en la tabla
 def mostrar_datos(datos:pd.DataFrame):
+    global rowselector
+    
     datos = datos.to_dict("list")
     values = []
     for col in range(len(list(datos.keys()))):
@@ -220,12 +222,14 @@ def mostrar_datos(datos:pd.DataFrame):
         
     values.insert(0,list(datos.keys()))
     
-    tabla = CTkTable(master=scrollable_frame,column=len(datos.keys()),values=values)
+    tabla = CTkTable(master=scrollable_frame,column=len(datos.keys()),values=values,header_color="#79CAC1")
     tabla.grid(row=0, column=0)
+
+    rowselector = CTkTableRowSelector(tabla)
 
     # Botón para imprimir las filas seleccionadas
     boton_imprimir = ctk.CTkButton(
-        master=home_frame, text="guardar informacion", command=lambda: guardar_data())
+        master=home_frame, text="guardar informacion", command=lambda: guardar_data(rowselector))
     boton_imprimir.grid(row=2, column=0, pady=(0, 20))
     
     # Botón para imprimir las filas seleccionadas
@@ -375,7 +379,11 @@ top_left_panel.pack(side=ctk.LEFT, fill=ctk.X, expand=True)
 top_right_panel = ctk.CTkFrame(top_frame)
 top_right_panel.pack(side=ctk.RIGHT, fill=ctk.X, expand=True)
 
+
+# Variable global con los datos
 datos = pd.DataFrame()
+
+rowselector = None
 
 # Agregar un Combobox al panel superior izquierdo
 combobox_left = ctk.CTkComboBox(top_left_panel, values=["Opción 1", "Opción 2", "Opción 3"],command=update_grafico1)
