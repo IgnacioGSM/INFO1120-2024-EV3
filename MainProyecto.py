@@ -156,22 +156,16 @@ def leer_archivo_csv(ruta_archivo):
     except Exception as e:
         print(f"Error al leer el archivo CSV: {e}")
     else:
-        actualiza_graficos(datos)
+        actualiza_combobox(datos)
         mostrar_datos(datos)
 
-def actualiza_graficos(datos):
-    global combobox_left
+def actualiza_combobox(datos):
+    global combobox_left, combobox_right
     combobox_left.configure(values=sorted(list(set(datos["Pais"]))))
     combobox_left.set("Seleccione País")
 
-    '''profesiones = sorted(list(set(datos["Profesion"])))
-    x = np.arange(len(profesiones))
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(profesiones)
-    if canvas1: canvas1.get_tk_widget().pack_forget()
-    canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
-    canvas1.draw()
-    canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)'''
+    combobox_right.configure(values=sorted(list(set(datos["Profesion"]))))
+    combobox_right.set("Seleccione Profesión")
 
 def update_grafico1(choice):
     global datos, profesiones, x, y, fig1, ax1, canvas1
@@ -195,8 +189,40 @@ def update_grafico1(choice):
         canvas1.draw()
         canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
+def update_grafico2(choice):
+    global datos, profesiones, labels, sizes, colors, fig2, ax2, canvas2
+    if not datos.empty:
+        data_profesion = datos[datos["Profesion"] == choice]
+        labels = sorted(list(set(data_profesion["Estado_Emocional"])))
+        sizes = []
+        for emocion in labels:
+            sizes.append(len(data_profesion[data_profesion["Estado_Emocional"] == emocion]))
+        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+        #explode = (0.1, 0, 0, 0)  # explotar la porción 1
+        ax2.clear()
+        ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+        ax2.axis('equal')  # para que el gráfico sea un círculo
+        ax2.set_title("Estado emocional vs profesion")
+        if canvas2: canvas2.get_tk_widget().pack_forget()
+        canvas2 = FigureCanvasTkAgg(fig2, master=right_panel)
+        canvas2.draw()
+        canvas2.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
+
 # Función para mostrar los datos en la tabla
-def mostrar_datos(datos):
+def mostrar_datos(datos:pd.DataFrame):
+    datos = datos.to_dict("list")
+    values = []
+    for col in range(len(list(datos.keys()))):
+        values.append([])
+    for i in range(len(values)):
+        for key in datos.keys():
+            values[i].append(datos[key][i])
+        
+    values.insert(0,list(datos.keys()))
+    
+    tabla = CTkTable(master=scrollable_frame,column=len(datos.keys()),values=values)
+    tabla.grid(row=0, column=0)
+
     # Botón para imprimir las filas seleccionadas
     boton_imprimir = ctk.CTkButton(
         master=home_frame, text="guardar informacion", command=lambda: guardar_data())
@@ -356,7 +382,7 @@ combobox_left = ctk.CTkComboBox(top_left_panel, values=["Opción 1", "Opción 2"
 combobox_left.pack(pady=20, padx=20)
 
 # Agregar un Combobox al panel superior derecho
-combobox_right = ctk.CTkComboBox(top_right_panel, values=["Opción 1", "Opción 2", "Opción 3"])
+combobox_right = ctk.CTkComboBox(top_right_panel, values=["Opción 1", "Opción 2", "Opción 3"],command=update_grafico2)
 combobox_right.pack(pady=20, padx=20)
 # Crear el gráfico de barras en el panel izquierdo
 fig1, ax1 = plt.subplots()
