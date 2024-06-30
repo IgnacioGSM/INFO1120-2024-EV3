@@ -62,7 +62,6 @@ def agregar_latlong(table_name,conn):
         latlong = utm_to_latlong(data.iloc[i]["UTM_Easting"],data.iloc[i]["UTM_Northing"],data.iloc[i]["UTM_Zone_Number"],data.iloc[i]["UTM_Zone_Letter"])
         data.at[i,"Latitud"] = latlong[0]
         data.at[i,"Longitud"] = latlong[1]
-    data.drop(columns=["UTM_Easting","UTM_Northing","UTM_Zone_Letter","UTM_Zone_Number"],inplace=True)
     data.to_sql(table_name,conn,if_exists="replace",index=False)
 
 def agregar_df_a_sqlite(df, database_name, table_name):
@@ -81,6 +80,8 @@ def agregar_df_a_sqlite(df, database_name, table_name):
     df.to_sql(table_name, conn, if_exists='replace', index=False)
 
     agregar_latlong("coordenadas",conn)
+    df.drop(columns=["UTM_Easting","UTM_Northing","UTM_Zone_Letter","UTM_Zone_Number"],inplace=True)
+    df.to_sql(table_name, conn, if_exists='replace', index=False)
 
     global datos
     datos, columnas = ejecutar_query_sqlite(database_name,"personas pe NATURAL JOIN coordenadas co")
@@ -373,7 +374,7 @@ home_frame_large_image_label.grid(row=0, column=0, padx=15, pady=15)
 home_frame_cargar_datos=ctk.CTkButton(data_panel_superior, command=seleccionar_archivo,text="Cargar Archivo",fg_color='green',hover_color='gray')
 home_frame_cargar_datos.grid(row=0, column=1, padx=15, pady=15)
 
-scrollable_frame = ctk.CTkScrollableFrame(master=data_panel_inferior)
+scrollable_frame = ctk.CTkScrollableFrame(master=data_panel_inferior,orientation="horizontal")
 scrollable_frame.grid(row=0, column=0,sticky="nsew")
 
 
