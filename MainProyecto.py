@@ -47,11 +47,12 @@ def ejecutar_query_sqlite(database_name, table_name, columns='*', where_column=N
 
     # Obtener los resultados de la consulta
     resultados = cursor.fetchall()
+    columnas = [descripcion[0] for descripcion in cursor.description]
 
     # Cerrar la conexión
     conn.close()
 
-    return resultados
+    return resultados, columnas
 
 def agregar_latlong(table_name,conn):
     data = pd.read_sql_query("SELECT RUT, UTM_Easting, UTM_Northing, UTM_Zone_Number, UTM_Zone_Letter FROM personas",conn)
@@ -62,7 +63,6 @@ def agregar_latlong(table_name,conn):
         data.at[i,"Latitud"] = latlong[0]
         data.at[i,"Longitud"] = latlong[1]
     data.drop(columns=["UTM_Easting","UTM_Northing","UTM_Zone_Letter","UTM_Zone_Number"],inplace=True)
-    print(data)
     data.to_sql(table_name,conn,if_exists="replace",index=False)
 
 def agregar_df_a_sqlite(df, database_name, table_name):
@@ -81,11 +81,16 @@ def agregar_df_a_sqlite(df, database_name, table_name):
     df.to_sql(table_name, conn, if_exists='replace', index=False)
 
     agregar_latlong("coordenadas",conn)
+
+    global datos
+    datos, columnas = ejecutar_query_sqlite(database_name,"personas pe NATURAL JOIN coordenadas co")
+    datos = pd.DataFrame(datos,columns=columnas)
     
     # Cerrar la conexión
     conn.close()
     global archivo
     archivo = archivo[:-4]+".sql"
+    mostrar_datos(datos)
 
 #documentacion=https://github.com/TomSchimansky/TkinterMapView?tab=readme-ov-file#create-path-from-position-list
 def get_country_city(lat,long):
@@ -176,7 +181,6 @@ def leer_archivo_csv(ruta_archivo):
         archivo = ruta_archivo
         actualiza_combobox(datos)
         mostrar_datos(datos)
-        print(archivo)
 
 def actualiza_combobox(datos):
     global combobox_left, combobox_right
@@ -236,10 +240,11 @@ def mostrar_datos(datos:pd.DataFrame):
     global rowselector
     
     datos_mostrados = datos.to_dict("list")
+    rows = len(list(datos_mostrados.values())[0])
     values = []
-    for col in range(len(list(datos_mostrados.keys()))):
+    for col in range(rows):
         values.append([])
-    for i in range(len(values)):
+    for i in range(rows):
         for key in datos_mostrados.keys():
             values[i].append(datos_mostrados[key][i])
         
