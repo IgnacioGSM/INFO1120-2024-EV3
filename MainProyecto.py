@@ -40,7 +40,7 @@ def ejecutar_query_sqlite(database_name, table_name, columns='*', where_column=N
     # Crear la consulta SQL
     query = f'SELECT {columns} FROM {table_name}'
     if where_column and where_value is not None:
-        query += f' WHERE {where_column} = ?'
+        query += f' WHERE {where_column} = {where_value}'
 
     # Ejecutar la consulta SQL
     cursor.execute(query, (where_value,) if where_column and where_value is not None else ())
@@ -52,6 +52,18 @@ def ejecutar_query_sqlite(database_name, table_name, columns='*', where_column=N
     conn.close()
 
     return resultados
+
+def agregar_latlong(table_name,conn):
+    data = pd.read_sql_query("SELECT RUT, UTM_Easting, UTM_Northing, UTM_Zone_Number, UTM_Zone_Letter FROM personas",conn)
+    data.insert(len(data.columns),"Latitud",value=None)
+    data.insert(len(data.columns),"Longitud",value=None)
+    for i in range(len(data)):
+        latlong = utm_to_latlong(data.iloc[i]["UTM_Easting"],data.iloc[i]["UTM_Northing"],data.iloc[i]["UTM_Zone_Number"],data.iloc[i]["UTM_Zone_Letter"])
+        data.at[i,"Latitud"] = latlong[0]
+        data.at[i,"Longitud"] = latlong[1]
+    data.drop(columns=["UTM_Easting","UTM_Northing","UTM_Zone_Letter","UTM_Zone_Number"],inplace=True)
+    print(data)
+    data.to_sql(table_name,conn,if_exists="replace",index=False)
 
 def agregar_df_a_sqlite(df, database_name, table_name):
     """
@@ -67,11 +79,14 @@ def agregar_df_a_sqlite(df, database_name, table_name):
     
     # Agregar el DataFrame a la tabla SQLite
     df.to_sql(table_name, conn, if_exists='replace', index=False)
+
+    agregar_latlong("coordenadas",conn)
     
     # Cerrar la conexión
     conn.close()
     global archivo
     archivo = archivo[:-4]+".sql"
+
 #documentacion=https://github.com/TomSchimansky/TkinterMapView?tab=readme-ov-file#create-path-from-position-list
 def get_country_city(lat,long):
     country = tkintermapview.convert_coordinates_to_country(lat, long)
