@@ -70,6 +70,8 @@ def agregar_df_a_sqlite(df, database_name, table_name):
     
     # Cerrar la conexión
     conn.close()
+    global archivo
+    archivo = archivo[:-4]+".sql"
 #documentacion=https://github.com/TomSchimansky/TkinterMapView?tab=readme-ov-file#create-path-from-position-list
 def get_country_city(lat,long):
     country = tkintermapview.convert_coordinates_to_country(lat, long)
@@ -150,14 +152,16 @@ def on_scrollbar_move(*args):
     canvas.yview(*args)
     canvas.bbox("all")
 def leer_archivo_csv(ruta_archivo):
+    global datos, archivo
     try:
-        global datos
         datos = pd.read_csv(ruta_archivo)
     except Exception as e:
         print(f"Error al leer el archivo CSV: {e}")
     else:
+        archivo = ruta_archivo
         actualiza_combobox(datos)
         mostrar_datos(datos)
+        print(archivo)
 
 def actualiza_combobox(datos):
     global combobox_left, combobox_right
@@ -168,68 +172,72 @@ def actualiza_combobox(datos):
     combobox_right.set("Seleccione Profesión")
 
 def update_grafico1(choice):
-    global datos, profesiones, x, y, fig1, ax1, canvas1
-    if not datos.empty:
-        data_pais = datos[datos["Pais"] == choice]
+    global archivo
+    if archivo[-4:] == ".sql":
+        global datos, profesiones, x, y, fig1, ax1, canvas1
+        if not datos.empty:
+            data_pais = datos[datos["Pais"] == choice]
 
-        ax1.clear()
-        profesiones = sorted(list(set(data_pais["Profesion"])))
-        x = np.arange(len(profesiones))
-        y = []
-        for profesion in profesiones:
-            y.append(len(data_pais[data_pais["Profesion"] == profesion]))
-        ax1.bar(x, y)
-        ax1.set_xticks(x)
-        ax1.set_xticklabels(profesiones)
-        ax1.set_xlabel("Profesiones")
-        ax1.set_ylabel("Numero de profesionales")
-        ax1.set_title("Profesiones vs Paises")
-        if canvas1: canvas1.get_tk_widget().pack_forget()
-        canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
-        canvas1.draw()
-        canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
+            ax1.clear()
+            profesiones = sorted(list(set(data_pais["Profesion"])))
+            x = np.arange(len(profesiones))
+            y = []
+            for profesion in profesiones:
+                y.append(len(data_pais[data_pais["Profesion"] == profesion]))
+            ax1.bar(x, y)
+            ax1.set_xticks(x)
+            ax1.set_xticklabels(profesiones)
+            ax1.set_xlabel("Profesiones")
+            ax1.set_ylabel("Numero de profesionales")
+            ax1.set_title("Profesiones vs Paises")
+            if canvas1: canvas1.get_tk_widget().pack_forget()
+            canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
+            canvas1.draw()
+            canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
 def update_grafico2(choice):
-    global datos, profesiones, labels, sizes, colors, fig2, ax2, canvas2
-    if not datos.empty:
-        data_profesion = datos[datos["Profesion"] == choice]
-        labels = sorted(list(set(data_profesion["Estado_Emocional"])))
-        sizes = []
-        for emocion in labels:
-            sizes.append(len(data_profesion[data_profesion["Estado_Emocional"] == emocion]))
-        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
-        #explode = (0.1, 0, 0, 0)  # explotar la porción 1
-        ax2.clear()
-        ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
-        ax2.axis('equal')  # para que el gráfico sea un círculo
-        ax2.set_title("Estado emocional vs profesion")
-        if canvas2: canvas2.get_tk_widget().pack_forget()
-        canvas2 = FigureCanvasTkAgg(fig2, master=right_panel)
-        canvas2.draw()
-        canvas2.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
+    global archivo
+    if archivo[-4:] == ".sql":
+        global datos, profesiones, labels, sizes, colors, fig2, ax2, canvas2
+        if not datos.empty:
+            data_profesion = datos[datos["Profesion"] == choice]
+            labels = sorted(list(set(data_profesion["Estado_Emocional"])))
+            sizes = []
+            for emocion in labels:
+                sizes.append(len(data_profesion[data_profesion["Estado_Emocional"] == emocion]))
+            colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+            #explode = (0.1, 0, 0, 0)  # explotar la porción 1
+            ax2.clear()
+            ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+            ax2.axis('equal')  # para que el gráfico sea un círculo
+            ax2.set_title("Estado emocional vs profesion")
+            if canvas2: canvas2.get_tk_widget().pack_forget()
+            canvas2 = FigureCanvasTkAgg(fig2, master=right_panel)
+            canvas2.draw()
+            canvas2.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
 # Función para mostrar los datos en la tabla
 def mostrar_datos(datos:pd.DataFrame):
     global rowselector
     
-    datos = datos.to_dict("list")
+    datos_mostrados = datos.to_dict("list")
     values = []
-    for col in range(len(list(datos.keys()))):
+    for col in range(len(list(datos_mostrados.keys()))):
         values.append([])
     for i in range(len(values)):
-        for key in datos.keys():
-            values[i].append(datos[key][i])
+        for key in datos_mostrados.keys():
+            values[i].append(datos_mostrados[key][i])
         
-    values.insert(0,list(datos.keys()))
+    values.insert(0,list(datos_mostrados.keys()))
     
-    tabla = CTkTable(master=scrollable_frame,column=len(datos.keys()),values=values,header_color="#79CAC1")
+    tabla = CTkTable(master=scrollable_frame,column=len(datos_mostrados.keys()),values=values,header_color="#79CAC1")
     tabla.grid(row=0, column=0)
 
     rowselector = CTkTableRowSelector(tabla)
 
     # Botón para imprimir las filas seleccionadas
     boton_imprimir = ctk.CTkButton(
-        master=home_frame, text="guardar informacion", command=lambda: guardar_data(rowselector))
+        master=home_frame, text="guardar informacion", command=lambda: agregar_df_a_sqlite(datos,archivo[:-4]+".sql","personas"))
     boton_imprimir.grid(row=2, column=0, pady=(0, 20))
     
     # Botón para imprimir las filas seleccionadas
@@ -380,8 +388,9 @@ top_right_panel = ctk.CTkFrame(top_frame)
 top_right_panel.pack(side=ctk.RIGHT, fill=ctk.X, expand=True)
 
 
-# Variable global con los datos
+# Variable global con los datos y el nombre del archivo
 datos = pd.DataFrame()
+archivo = ""
 
 rowselector = None
 
