@@ -181,7 +181,6 @@ def leer_archivo_csv(ruta_archivo):
         print(f"Error al leer el archivo CSV: {e}")
     else:
         archivo = ruta_archivo
-        actualiza_combobox(datos)
         mostrar_datos(datos)
 
 def actualiza_combobox(datos):
@@ -302,6 +301,7 @@ def frame_2_button_event():
         data,columns = ejecutar_query_sqlite(archivo,"personas")
         global datos
         datos = pd.DataFrame(data,columns=columns)
+        actualiza_combobox(datos)
 
 def frame_3_button_event():
     select_frame_by_name("frame_3")
@@ -387,10 +387,7 @@ home_frame_large_image_label.grid(row=0, column=0, padx=15, pady=15)
 home_frame_cargar_datos=ctk.CTkButton(data_panel_superior, command=seleccionar_archivo,text="Cargar Archivo",fg_color='green',hover_color='gray')
 home_frame_cargar_datos.grid(row=0, column=1, padx=15, pady=15)
 
-scrollable_frame_vertical = ctk.CTkScrollableFrame(master=data_panel_inferior)
-scrollable_frame_vertical.grid(row=0, column=0,sticky="nsew")
-
-scrollable_frame = ctk.CTkScrollableFrame(master=scrollable_frame_vertical,orientation="horizontal")
+scrollable_frame = ctk.CTkScrollableFrame(master=data_panel_inferior,orientation="horizontal")
 scrollable_frame.grid(row=0, column=0,sticky="nsew")
 
 
