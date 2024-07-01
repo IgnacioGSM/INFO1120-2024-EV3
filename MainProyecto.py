@@ -32,6 +32,7 @@ def ejecutar_query_sqlite(database_name, table_name, columns='*', where_column=N
 
     Retorna:
     list: Lista con los resultados de la consulta.
+    List: Lista con el nombre de las columnas.
     """
     # Conectar a la base de datos SQLite
     conn = sqlite3.connect(database_name)
@@ -115,7 +116,7 @@ def combo_event2(value):
         marker_2.delete()
     except NameError:
         pass
-    result=ejecutar_query_sqlite('progra2024_final.db', 'personas_coordenadas',columns='Latitude,Longitude,Nombre,Apellido', where_column='RUT', where_value=value)
+    result, =ejecutar_query_sqlite('progra2024_final.db', 'personas_coordenadas',columns='Latitude,Longitude,Nombre,Apellido', where_column='RUT', where_value=value)
     nombre_apellido=str(result[0][2])+' '+str(result[0][3])
     marker_2 = map_widget.set_marker(result[0][0], result[0][1], text=nombre_apellido)
    
@@ -290,12 +291,24 @@ def select_frame_by_name(name):
 
 def home_button_event():
     select_frame_by_name("home")
+    if archivo[-4:] == ".sql":
+        data,columns = ejecutar_query_sqlite(archivo,"personas NATURAL JOIN coordenadas")
+        global datos
+        datos = pd.DataFrame(data,columns=columns)
 
 def frame_2_button_event():
     select_frame_by_name("frame_2")
+    if archivo[-4:] == ".sql":
+        data,columns = ejecutar_query_sqlite(archivo,"personas")
+        global datos
+        datos = pd.DataFrame(data,columns=columns)
 
 def frame_3_button_event():
     select_frame_by_name("frame_3")
+    if archivo[-4:] == ".sql":
+        data,columns = ejecutar_query_sqlite(archivo,"coordenadas")
+        global datos
+        datos = pd.DataFrame(data,columns=columns)
 
 def change_appearance_mode_event(new_appearance_mode):
     ctk.set_appearance_mode(new_appearance_mode)
@@ -374,15 +387,18 @@ home_frame_large_image_label.grid(row=0, column=0, padx=15, pady=15)
 home_frame_cargar_datos=ctk.CTkButton(data_panel_superior, command=seleccionar_archivo,text="Cargar Archivo",fg_color='green',hover_color='gray')
 home_frame_cargar_datos.grid(row=0, column=1, padx=15, pady=15)
 
-scrollable_frame = ctk.CTkScrollableFrame(master=data_panel_inferior,orientation="horizontal")
+scrollable_frame_vertical = ctk.CTkScrollableFrame(master=data_panel_inferior)
+scrollable_frame_vertical.grid(row=0, column=0,sticky="nsew")
+
+scrollable_frame = ctk.CTkScrollableFrame(master=scrollable_frame_vertical,orientation="horizontal")
 scrollable_frame.grid(row=0, column=0,sticky="nsew")
 
 
 
 # Crear el segundo marco
 second_frame = ctk.CTkFrame(root, corner_radius=0, fg_color="transparent")
-#second_frame.grid_rowconfigure(0, weight=1)
-#second_frame.grid_columnconfigure(0, weight=1)
+second_frame.grid_rowconfigure(0, weight=1)
+second_frame.grid_columnconfigure(0, weight=1)
 second_frame.grid_rowconfigure(1, weight=1)
 second_frame.grid_columnconfigure(1, weight=1)
 
