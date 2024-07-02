@@ -205,6 +205,14 @@ def editar_fila(index,entradas):
         except ValueError:
             datos.iloc[[index],[i]] = row[i]
     mostrar_datos(datos)
+    toplevel_window.destroy()
+
+def eliminar_fila():
+    if rowselector.get():
+        row_index = datos[datos["RUT"] == rowselector.get()[0][0]].index[0]
+        mensaje_eliminar_fila(row_index)
+    else:
+        mensaje_seleccionar_fila()
 
 # Función para manejar la selección del archivo
 def seleccionar_archivo():
@@ -326,7 +334,7 @@ def mostrar_datos(datos:pd.DataFrame):
 
     # Botón para imprimir las filas seleccionadas
     boton_imprimir = ctk.CTkButton(
-        master=data_panel_superior, text="Eliminar dato", command=lambda: editar_panel(root),fg_color='purple',hover_color='red')
+        master=data_panel_superior, text="Eliminar dato", command=eliminar_fila,fg_color='purple',hover_color='red')
     boton_imprimir.grid(row=0, column=3, padx=(10, 0))
 def select_frame_by_name(name):
     home_button.configure(fg_color=("gray75", "gray25") if name == "home" else "transparent")
@@ -381,6 +389,17 @@ def mensaje_datos_gardados():
 
 def mensaje_seleccionar_fila():
     msg = CTkMessagebox(title="Modificacion de tabla",message="Seleccione una fila primero",icon="warning")
+
+def mensaje_eliminar_fila(index):
+    msg = CTkMessagebox(title="Eliminar fila",message="Está seguro que quiere eliminar la fila seleccionada?",icon="warning",option_1="Eliminar",option_2="Cancelar")
+    eleccion = msg.get()
+    if eleccion == "Eliminar":
+        global datos
+        datos.drop([index],inplace=True)
+        mostrar_datos(datos)
+        msg.destroy()
+    else:
+        msg.destroy()
 
 def change_appearance_mode_event(new_appearance_mode):
     ctk.set_appearance_mode(new_appearance_mode)
