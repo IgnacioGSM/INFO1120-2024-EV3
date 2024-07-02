@@ -262,6 +262,9 @@ def mostrar_datos(datos:pd.DataFrame):
             values[i].append(datos_mostrados[key][i])
         
     values.insert(0,list(datos_mostrados.keys()))
+
+    for widget in scrollable_frame.winfo_children():
+        widget.destroy()
     
     tabla = CTkTable(master=scrollable_frame,column=len(datos_mostrados.keys()),values=values,header_color="#79CAC1")
     tabla.grid(row=0, column=0)
@@ -308,19 +311,26 @@ def home_button_event():
         datos = pd.DataFrame(data,columns=columns)
 
 def frame_2_button_event():
-    select_frame_by_name("frame_2")
     if archivo[-4:] == ".sql":
+        select_frame_by_name("frame_2")
         data,columns = ejecutar_query_sqlite(archivo,"personas")
         global datos
         datos = pd.DataFrame(data,columns=columns)
         actualiza_combobox(datos)
+    else:
+        mensaje_acceso_bloqueado()
 
 def frame_3_button_event():
-    select_frame_by_name("frame_3")
     if archivo[-4:] == ".sql":
+        select_frame_by_name("frame_3")
         data,columns = ejecutar_query_sqlite(archivo,"coordenadas")
         global datos
         datos = pd.DataFrame(data,columns=columns)
+    else:
+        mensaje_acceso_bloqueado()
+
+def mensaje_acceso_bloqueado():
+    msg = CTkMessagebox(title="Ventana no disponible",message="Para ingresar primero guarda la tabla de datos o carga un archivo .sql",icon="cancel")
 
 def change_appearance_mode_event(new_appearance_mode):
     ctk.set_appearance_mode(new_appearance_mode)
