@@ -93,6 +93,7 @@ def agregar_df_a_sqlite(df, database_name, table_name):
     global archivo
     archivo = archivo[:-4]+".sql"
     mostrar_datos(datos)
+    mensaje_datos_gardados()
 
 #documentacion=https://github.com/TomSchimansky/TkinterMapView?tab=readme-ov-file#create-path-from-position-list
 def get_country_city(lat,long):
@@ -331,6 +332,9 @@ def frame_3_button_event():
 
 def mensaje_acceso_bloqueado():
     msg = CTkMessagebox(title="Ventana no disponible",message="Para ingresar primero guarda la tabla de datos o carga un archivo .sql",icon="cancel")
+
+def mensaje_datos_gardados():
+    msg = CTkMessagebox(title="Guardado",message="Se ha actualizado la base de datos exitosamente",icon="check")
 
 def change_appearance_mode_event(new_appearance_mode):
     ctk.set_appearance_mode(new_appearance_mode)
