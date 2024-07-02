@@ -166,10 +166,12 @@ def editar_panel(root):
         toplevel_window.focus()
 # Función para manejar la selección del archivo
 def seleccionar_archivo():
-    archivo = filedialog.askopenfilename(filetypes=[("Archivos CSV", "*.csv")])
-    if archivo:
+    archivo = filedialog.askopenfilename(filetypes=[("Archivos CSV", "*.csv"),("Archivos SQL", "*.sql")])
+    if archivo[-4:] == ".csv":
         print(f"Archivo seleccionado: {archivo}")
         leer_archivo_csv(archivo) # antes: mostrar_datos(archivo)
+    elif archivo[-4:] == ".sql":
+        leer_archivo_sql(archivo)
 def on_scrollbar_move(*args):
     canvas.yview(*args)
     canvas.bbox("all")
@@ -181,6 +183,18 @@ def leer_archivo_csv(ruta_archivo):
         print(f"Error al leer el archivo CSV: {e}")
     else:
         archivo = ruta_archivo
+        mostrar_datos(datos)
+
+def leer_archivo_sql(ruta_archivo):
+    global datos, archivo
+    try:
+        data,columns = ejecutar_query_sqlite(ruta_archivo,"personas NATURAL JOIN coordenadas")
+        datos = pd.DataFrame(data,columns=columns)
+    except Exception as e:
+        print(f"Error al leer el archivo SQL: {e}")
+    else:
+        archivo = ruta_archivo
+        print(f"Archivo seleccionado: {archivo}")
         mostrar_datos(datos)
 
 def actualiza_combobox(datos):
@@ -195,46 +209,44 @@ def update_grafico1(choice):
     global archivo
     if archivo[-4:] == ".sql":
         global datos, profesiones, x, y, fig1, ax1, canvas1
-        if not datos.empty:
-            data_pais = datos[datos["Pais"] == choice]
+        data_pais = datos[datos["Pais"] == choice]
 
-            ax1.clear()
-            profesiones = sorted(list(set(data_pais["Profesion"])))
-            x = np.arange(len(profesiones))
-            y = []
-            for profesion in profesiones:
-                y.append(len(data_pais[data_pais["Profesion"] == profesion]))
-            ax1.bar(x, y)
-            ax1.set_xticks(x)
-            ax1.set_xticklabels(profesiones)
-            ax1.set_xlabel("Profesiones")
-            ax1.set_ylabel("Numero de profesionales")
-            ax1.set_title("Profesiones vs Paises")
-            if canvas1: canvas1.get_tk_widget().pack_forget()
-            canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
-            canvas1.draw()
-            canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
+        ax1.clear()
+        profesiones = sorted(list(set(data_pais["Profesion"])))
+        x = np.arange(len(profesiones))
+        y = []
+        for profesion in profesiones:
+            y.append(len(data_pais[data_pais["Profesion"] == profesion]))
+        ax1.bar(x, y)
+        ax1.set_xticks(x)
+        ax1.set_xticklabels(profesiones)
+        ax1.set_xlabel("Profesiones")
+        ax1.set_ylabel("Numero de profesionales")
+        ax1.set_title("Profesiones vs Paises")
+        if canvas1: canvas1.get_tk_widget().pack_forget()
+        canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
+        canvas1.draw()
+        canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
 def update_grafico2(choice):
     global archivo
     if archivo[-4:] == ".sql":
         global datos, profesiones, labels, sizes, colors, fig2, ax2, canvas2
-        if not datos.empty:
-            data_profesion = datos[datos["Profesion"] == choice]
-            labels = sorted(list(set(data_profesion["Estado_Emocional"])))
-            sizes = []
-            for emocion in labels:
-                sizes.append(len(data_profesion[data_profesion["Estado_Emocional"] == emocion]))
-            colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
-            #explode = (0.1, 0, 0, 0)  # explotar la porción 1
-            ax2.clear()
-            ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
-            ax2.axis('equal')  # para que el gráfico sea un círculo
-            ax2.set_title("Estado emocional vs profesion")
-            if canvas2: canvas2.get_tk_widget().pack_forget()
-            canvas2 = FigureCanvasTkAgg(fig2, master=right_panel)
-            canvas2.draw()
-            canvas2.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
+        data_profesion = datos[datos["Profesion"] == choice]
+        labels = sorted(list(set(data_profesion["Estado_Emocional"])))
+        sizes = []
+        for emocion in labels:
+            sizes.append(len(data_profesion[data_profesion["Estado_Emocional"] == emocion]))
+        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+        #explode = (0.1, 0, 0, 0)  # explotar la porción 1
+        ax2.clear()
+        ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+        ax2.axis('equal')  # para que el gráfico sea un círculo
+        ax2.set_title("Estado emocional vs profesion")
+        if canvas2: canvas2.get_tk_widget().pack_forget()
+        canvas2 = FigureCanvasTkAgg(fig2, master=right_panel)
+        canvas2.draw()
+        canvas2.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
 # Función para mostrar los datos en la tabla
 def mostrar_datos(datos:pd.DataFrame):
@@ -382,7 +394,7 @@ data_panel_inferior.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 data_panel_inferior.grid_rowconfigure(0, weight=1)
 data_panel_inferior.grid_columnconfigure(0, weight=1)
 
-home_frame_large_image_label = ctk.CTkLabel(data_panel_superior, text="Ingresa el archivo en formato .csv",font=ctk.CTkFont(size=15, weight="bold"))
+home_frame_large_image_label = ctk.CTkLabel(data_panel_superior, text="Ingresa el archivo en formato .csv o .sql",font=ctk.CTkFont(size=15, weight="bold"))
 home_frame_large_image_label.grid(row=0, column=0, padx=15, pady=15)
 home_frame_cargar_datos=ctk.CTkButton(data_panel_superior, command=seleccionar_archivo,text="Cargar Archivo",fg_color='green',hover_color='gray')
 home_frame_cargar_datos.grid(row=0, column=1, padx=15, pady=15)
@@ -394,8 +406,8 @@ scrollable_frame.grid(row=0, column=0,sticky="nsew")
 
 # Crear el segundo marco
 second_frame = ctk.CTkFrame(root, corner_radius=0, fg_color="transparent")
-second_frame.grid_rowconfigure(0, weight=1)
-second_frame.grid_columnconfigure(0, weight=1)
+#second_frame.grid_rowconfigure(0, weight=1)
+#second_frame.grid_columnconfigure(0, weight=1)
 second_frame.grid_rowconfigure(1, weight=1)
 second_frame.grid_columnconfigure(1, weight=1)
 
