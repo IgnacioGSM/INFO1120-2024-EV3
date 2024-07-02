@@ -317,7 +317,7 @@ def mostrar_datos(datos:pd.DataFrame):
         widget.destroy()
     
     tabla = CTkTable(master=scrollable_frame,column=len(datos_mostrados.keys()),values=values,header_color="#79CAC1")
-    tabla.grid(row=0, column=0)
+    tabla.pack(expand=True,fill="both")
 
     rowselector = CTkTableRowSelector(tabla)
     rowselector.max_selection = 1
@@ -478,7 +478,7 @@ home_frame_large_image_label.grid(row=0, column=0, padx=15, pady=15)
 home_frame_cargar_datos=ctk.CTkButton(data_panel_superior, command=seleccionar_archivo,text="Cargar Archivo",fg_color='green',hover_color='gray')
 home_frame_cargar_datos.grid(row=0, column=1, padx=15, pady=15)
 
-scrollable_frame = ctk.CTkScrollableFrame(master=data_panel_inferior,orientation="horizontal")
+scrollable_frame = ctk.CTkScrollableFrame(master=data_panel_inferior)
 scrollable_frame.grid(row=0, column=0,sticky="nsew")
 
 
