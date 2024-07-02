@@ -147,27 +147,65 @@ def center_window(window, width, height):
     window.geometry(f"{width}x{height}+{x}+{y}")
 
 def setup_toplevel(window):
-    window.geometry("400x300")
+    window.geometry("400x500")
     window.title("Modificar datos")
-    center_window(window, 400, 300)  # Centrar la ventana secundaria
+    center_window(window, 400, 500)  # Centrar la ventana secundaria
     window.lift()  # Levanta la ventana secundaria
     window.focus_force()  # Forzar el enfoque en la ventana secundaria
     window.grab_set()  # Evita la interacción con la ventana principal
 
-    label = ctk.CTkLabel(window, text="ToplevelWindow")
-    label.pack(padx=20, pady=20)
+    
 def calcular_distancia(RUT1,RUT2):
     pass
 def guardar_data(row_selector):
     print(row_selector.get())
     #print(row_selector.table.values)
 def editar_panel(root):
-    global toplevel_window
-    if toplevel_window is None or not toplevel_window.winfo_exists():
-        toplevel_window = ctk.CTkToplevel(root)
-        setup_toplevel(toplevel_window)
+    global toplevel_window, rowselector, datos
+    if rowselector.get():
+        row_index = datos[datos["RUT"] == rowselector.get()[0][0]].index[0]
+        if toplevel_window is None or not toplevel_window.winfo_exists():
+            toplevel_window = ctk.CTkToplevel(root)
+            setup_toplevel(toplevel_window)
+            scrollable_top = ctk.CTkScrollableFrame(master=toplevel_window)
+            scrollable_top.pack(fill="both",expand=True)
+
+            row_columns = [rowselector.get()[0], list(datos.columns)]
+            if "Longitud" in row_columns[1]:
+                del row_columns[1][-2:]
+            entradas = []
+
+            for i in range(len(row_columns[1])):
+                column_name = row_columns[1][i]
+                label = ctk.CTkLabel(scrollable_top,text=column_name)
+                label.pack()
+                value = row_columns[0][i]
+                i = ctk.CTkEntry(scrollable_top)
+                i.insert(0,value)
+                i.pack()
+                entradas.append(i)
+            
+            boton_editar = ctk.CTkButton(scrollable_top,text="Guardar cambios",command= lambda:editar_fila(row_index,entradas))
+            boton_editar.pack(pady=10)
+        else:
+            toplevel_window.focus()
     else:
-        toplevel_window.focus()
+        mensaje_seleccionar_fila()
+
+def editar_fila(index,entradas):
+    row = []
+    for i in range(len(entradas)):
+        nuevo_dato = entradas[i].get()
+        row.append(nuevo_dato)
+    global datos
+    for i in range(len(entradas)):
+        try:
+            row[i] = int(row[i])
+            datos.iloc[[index],[i]] = row[i]
+        except ValueError:
+            datos.iloc[[index],[i]] = row[i]
+    mostrar_datos(datos)
+
 # Función para manejar la selección del archivo
 def seleccionar_archivo():
     archivo = filedialog.askopenfilename(filetypes=[("Archivos CSV", "*.csv"),("Archivos SQL", "*.sql")])
@@ -274,6 +312,7 @@ def mostrar_datos(datos:pd.DataFrame):
     tabla.grid(row=0, column=0)
 
     rowselector = CTkTableRowSelector(tabla)
+    rowselector.max_selection = 1
 
     # Botón para imprimir las filas seleccionadas
     boton_imprimir = ctk.CTkButton(
@@ -313,6 +352,7 @@ def home_button_event():
         data,columns = ejecutar_query_sqlite(archivo,"personas NATURAL JOIN coordenadas")
         global datos
         datos = pd.DataFrame(data,columns=columns)
+        mostrar_datos(datos)
 
 def frame_2_button_event():
     if archivo[-4:] == ".sql":
@@ -338,6 +378,9 @@ def mensaje_acceso_bloqueado():
 
 def mensaje_datos_gardados():
     msg = CTkMessagebox(title="Guardado",message="Se ha actualizado la base de datos exitosamente",icon="check")
+
+def mensaje_seleccionar_fila():
+    msg = CTkMessagebox(title="Modificacion de tabla",message="Seleccione una fila primero",icon="warning")
 
 def change_appearance_mode_event(new_appearance_mode):
     ctk.set_appearance_mode(new_appearance_mode)
