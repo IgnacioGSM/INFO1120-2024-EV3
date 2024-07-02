@@ -197,13 +197,17 @@ def editar_fila(index,entradas):
     for i in range(len(entradas)):
         nuevo_dato = entradas[i].get()
         row.append(nuevo_dato)
-    global datos
+    global datos, archivo
     for i in range(len(entradas)):
         try:
             row[i] = int(row[i])
             datos.iloc[[index],[i]] = row[i]
         except ValueError:
             datos.iloc[[index],[i]] = row[i]
+    if archivo[-4:] == ".sql":
+        latlong = utm_to_latlong(datos.iloc[index]["UTM_Easting"],datos.iloc[index]["UTM_Northing"],datos.iloc[index]["UTM_Zone_Number"],datos.iloc[index]["UTM_Zone_Letter"])
+        datos.iloc[[index],[-2]] = latlong[0]
+        datos.iloc[[index],[-1]] = latlong[1]
     mostrar_datos(datos)
     toplevel_window.destroy()
 
