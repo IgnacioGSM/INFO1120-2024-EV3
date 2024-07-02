@@ -81,7 +81,10 @@ def agregar_df_a_sqlite(df, database_name, table_name):
     df.to_sql(table_name, conn, if_exists='replace', index=False)
 
     agregar_latlong("coordenadas",conn)
-    df.drop(columns=["UTM_Easting","UTM_Northing","UTM_Zone_Letter","UTM_Zone_Number"],inplace=True)
+    drop_columns = ["UTM_Easting","UTM_Northing","UTM_Zone_Letter","UTM_Zone_Number"]
+    if "Longitud" in list(df.columns):
+        drop_columns.extend(["Latitud","Longitud"])
+    df.drop(columns=drop_columns,inplace=True)
     df.to_sql(table_name, conn, if_exists='replace', index=False)
 
     global datos
