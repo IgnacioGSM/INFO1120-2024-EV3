@@ -17,8 +17,37 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
 def haversine(lat1, lon1, lat2, lon2):
-    #Función para calcular la distancia entre 2 puntos a partir de la longitud
-    pass
+    """
+    Calcula la distancia entre dos puntos en la Tierra especificados por su latitud y longitud usando la fórmula de Haversine.
+    
+    Parámetros:
+    lat1, lon1: Latitud y longitud del primer punto en grados.
+    lat2, lon2: Latitud y longitud del segundo punto en grados.
+    
+    Retorna:
+    Distancia entre los dos puntos en kilómetros.
+    """
+    # Radio de la Tierra en kilómetros
+    R = 6371.0
+    
+    # Convertir las coordenadas de grados a radianes
+    lat1_rad = math.radians(lat1)
+    lon1_rad = math.radians(lon1)
+    lat2_rad = math.radians(lat2)
+    lon2_rad = math.radians(lon2)
+    
+    # Diferencias de las coordenadas
+    dlat = lat2_rad - lat1_rad
+    dlon = lon2_rad - lon1_rad
+    
+    # Fórmula de Haversine
+    a = math.sin(dlat / 2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    # Distancia en kilómetros
+    distance = R * c
+    
+    return distance
 def ejecutar_query_sqlite(database_name, table_name, columns='*', where_column=None, where_value=None):
     """
     Ejecuta una consulta SQL en una base de datos SQLite y retorna una lista con los resultados.
@@ -129,6 +158,7 @@ def combo_event2(value):
     if not marker_2 == None:
         marker_2.delete()
     marker_2 = map_widget.set_marker(result[0][0], result[0][1], text=nombre_apellido)
+    activar_boton_calcular()
 
 def activar_rut2():
     global optionmenu_2
@@ -136,11 +166,12 @@ def activar_rut2():
     lista_ruts = []
     for rut in ruts[0]:                 # ruts[0] entrega una tupla de forma ("xxxxxxx-x",)
         lista_ruts.append(rut[0])       # se toma el primer elemento de esa tupla
+    label_rut2.grid(row=0, column=2, padx=5, pady=5)
     optionmenu_2.configure(values=lista_ruts)
     optionmenu_2.set("Elige un RUT")
-    optionmenu_2.grid(row=0, column=2, padx=5, pady=(5, 5))
+    optionmenu_2.grid(row=0, column=3, padx=5, pady=(5, 5))
 
-def actualizar_opciones_rut():
+def actualizar_frame3():
     ruts = ejecutar_query_sqlite(archivo,"coordenadas","RUT")
     lista_ruts = []
     for rut in ruts[0]:                 
@@ -149,9 +180,13 @@ def actualizar_opciones_rut():
     optionmenu_1.set("Elige un RUT")
     optionmenu_2.set("Elige un RUT")
     optionmenu_2.grid_forget()
+    label_rut2.grid_forget()
+    boton_calcular.grid_forget()
+    texto.grid_forget()
+    map_widget.delete_all_path()
 
 def activar_boton_calcular():
-    pass
+    boton_calcular.grid(row=0, column=4, padx=5, pady=(5, 5))
     
 def combo_event(value):
     pass
@@ -184,7 +219,12 @@ def setup_toplevel(window):
 
     
 def calcular_distancia(RUT1,RUT2):
-    pass
+    map_widget.delete_all_path()
+    distancia = haversine(RUT1[0],RUT1[1],RUT2[0],RUT2[1])
+    texto.configure(text=f"La distancia es de {distancia:.2f} Km.")
+    texto.grid(row=1, column=1, padx=5, pady=(5, 5))
+    linea = map_widget.set_path([marker_1.position,marker_2.position],color="#CF352E")
+
 def guardar_data(row_selector):
     print(row_selector.get())
     #print(row_selector.table.values)
@@ -405,7 +445,7 @@ def frame_3_button_event():
         data,columns = ejecutar_query_sqlite(archivo,"coordenadas")
         global datos
         datos = pd.DataFrame(data,columns=columns)
-        actualizar_opciones_rut()
+        actualizar_frame3()
         if marker_1 is not None:
             marker_1.delete()
         if marker_2 is not None:
@@ -607,11 +647,18 @@ third_frame_inf.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 map_widget=mapas(third_frame_inf)
 label_rut = ctk.CTkLabel(third_frame_top, text="RUT",font=ctk.CTkFont(size=15, weight="bold"))
 label_rut.grid(row=0, column=0, padx=5, pady=5)
+
+label_rut2 = ctk.CTkLabel(third_frame_top, text="RUT",font=ctk.CTkFont(size=15, weight="bold"))
+
 optionmenu_1 = ctk.CTkOptionMenu(third_frame_top, dynamic_resizing=True,
                                                         values=["Value 1", "Value 2", "Value Long Long Long"],command=lambda value:combo_event1(value))
 optionmenu_1.grid(row=0, column=1, padx=5, pady=(5, 5))
 
 optionmenu_2 = ctk.CTkOptionMenu(third_frame_top,dynamic_resizing=True,values=["blablabla"],command= lambda value:combo_event2(value))
+
+boton_calcular = ctk.CTkButton(third_frame_top,text="Calcular distancia",command=lambda:calcular_distancia(marker_1.position,marker_2.position))
+
+texto = ctk.CTkLabel(third_frame_top,text="blablalab")
 
 marker_1 = None
 marker_2 = None
