@@ -120,6 +120,7 @@ def combo_event1(value):
     if not marker_1 == None:
         marker_1.delete()
     marker_1 = map_widget.set_marker(result[0][0], result[0][1], text=nombre_apellido)
+    activar_rut2()
 
 def combo_event2(value):
     global archivo, marker_2
@@ -129,13 +130,28 @@ def combo_event2(value):
         marker_2.delete()
     marker_2 = map_widget.set_marker(result[0][0], result[0][1], text=nombre_apellido)
 
-def actualizar_opciones_rut():
+def activar_rut2():
+    global optionmenu_2
     ruts = ejecutar_query_sqlite(archivo,"coordenadas","RUT")   # funcion devuelve values y columnas, indice 0 es values
     lista_ruts = []
     for rut in ruts[0]:                 # ruts[0] entrega una tupla de forma ("xxxxxxx-x",)
         lista_ruts.append(rut[0])       # se toma el primer elemento de esa tupla
+    optionmenu_2.configure(values=lista_ruts)
+    optionmenu_2.set("Elige un RUT")
+    optionmenu_2.grid(row=0, column=2, padx=5, pady=(5, 5))
+
+def actualizar_opciones_rut():
+    ruts = ejecutar_query_sqlite(archivo,"coordenadas","RUT")
+    lista_ruts = []
+    for rut in ruts[0]:                 
+        lista_ruts.append(rut[0])       
     optionmenu_1.configure(values=lista_ruts)
     optionmenu_1.set("Elige un RUT")
+    optionmenu_2.set("Elige un RUT")
+    optionmenu_2.grid_forget()
+
+def activar_boton_calcular():
+    pass
     
 def combo_event(value):
     pass
@@ -390,6 +406,10 @@ def frame_3_button_event():
         global datos
         datos = pd.DataFrame(data,columns=columns)
         actualizar_opciones_rut()
+        if marker_1 is not None:
+            marker_1.delete()
+        if marker_2 is not None:
+            marker_2.delete()
     else:
         mensaje_acceso_bloqueado()
 
@@ -590,6 +610,8 @@ label_rut.grid(row=0, column=0, padx=5, pady=5)
 optionmenu_1 = ctk.CTkOptionMenu(third_frame_top, dynamic_resizing=True,
                                                         values=["Value 1", "Value 2", "Value Long Long Long"],command=lambda value:combo_event1(value))
 optionmenu_1.grid(row=0, column=1, padx=5, pady=(5, 5))
+
+optionmenu_2 = ctk.CTkOptionMenu(third_frame_top,dynamic_resizing=True,values=["blablabla"],command= lambda value:combo_event2(value))
 
 marker_1 = None
 marker_2 = None
