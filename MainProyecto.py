@@ -41,7 +41,7 @@ def ejecutar_query_sqlite(database_name, table_name, columns='*', where_column=N
     # Crear la consulta SQL
     query = f'SELECT {columns} FROM {table_name}'
     if where_column and where_value is not None:
-        query += f' WHERE {where_column} = {where_value}'
+        query += f' WHERE {where_column} = ?'
 
     # Ejecutar la consulta SQL
     cursor.execute(query, (where_value,) if where_column and where_value is not None else ())
@@ -112,18 +112,30 @@ def utm_to_latlong(easting, northing, zone_number, zone_letter):
     # Convertir UTM a latitud y longitud
     longitude, latitude = utm_proj(easting, northing, inverse=True)
     return round(latitude,2), round(longitude,2)
-def insertar_data(data:list):
-    pass
-    #necesitamos convertir las coordenadas UTM a lat long
-def combo_event2(value):
-    try:
-        marker_2.delete()
-    except NameError:
-        pass
-    result, =ejecutar_query_sqlite('progra2024_final.db', 'personas_coordenadas',columns='Latitude,Longitude,Nombre,Apellido', where_column='RUT', where_value=value)
+
+def combo_event1(value):
+    global archivo, marker_1
+    result, columnas =ejecutar_query_sqlite(archivo, 'coordenadas NATURAL JOIN personas',columns='Latitud,Longitud,Nombre,Apellido', where_column='RUT', where_value=value)
     nombre_apellido=str(result[0][2])+' '+str(result[0][3])
+    if not marker_1 == None:
+        marker_1.delete()
+    marker_1 = map_widget.set_marker(result[0][0], result[0][1], text=nombre_apellido)
+
+def combo_event2(value):
+    global archivo, marker_2
+    result, columnas =ejecutar_query_sqlite(archivo, 'coordenadas NATURAL JOIN personas',columns='Latitud,Longitud,Nombre,Apellido', where_column='RUT', where_value=value)
+    nombre_apellido=str(result[0][2])+' '+str(result[0][3])
+    if not marker_2 == None:
+        marker_2.delete()
     marker_2 = map_widget.set_marker(result[0][0], result[0][1], text=nombre_apellido)
-   
+
+def actualizar_opciones_rut():
+    ruts = ejecutar_query_sqlite(archivo,"coordenadas","RUT")   # funcion devuelve values y columnas, indice 0 es values
+    lista_ruts = []
+    for rut in ruts[0]:                 # ruts[0] entrega una tupla de forma ("xxxxxxx-x",)
+        lista_ruts.append(rut[0])       # se toma el primer elemento de esa tupla
+    optionmenu_1.configure(values=lista_ruts)
+    optionmenu_1.set("Elige un RUT")
     
 def combo_event(value):
     pass
@@ -260,47 +272,42 @@ def actualiza_combobox(datos):
     combobox_right.set("Seleccione Profesión")
 
 def update_grafico1(choice):
-    global archivo
-    if archivo[-4:] == ".sql":
-        global datos, profesiones, x, y, fig1, ax1, canvas1
-        data_pais = datos[datos["Pais"] == choice]
+    global datos, profesiones, x, y, fig1, ax1, canvas1
+    data_pais = datos[datos["Pais"] == choice]
 
-        ax1.clear()
-        profesiones = sorted(list(set(data_pais["Profesion"])))
-        x = np.arange(len(profesiones))
-        y = []
-        for profesion in profesiones:
-            y.append(len(data_pais[data_pais["Profesion"] == profesion]))
-        ax1.bar(x, y)
-        ax1.set_xticks(x)
-        ax1.set_xticklabels(profesiones)
-        ax1.set_xlabel("Profesiones")
-        ax1.set_ylabel("Numero de profesionales")
-        ax1.set_title("Profesiones vs Paises")
-        if canvas1: canvas1.get_tk_widget().pack_forget()
-        canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
-        canvas1.draw()
-        canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
+    ax1.clear()
+    profesiones = sorted(list(set(data_pais["Profesion"])))
+    x = np.arange(len(profesiones))
+    y = []
+    for profesion in profesiones:
+        y.append(len(data_pais[data_pais["Profesion"] == profesion]))
+    ax1.bar(x, y)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(profesiones)
+    ax1.set_xlabel("Profesiones")
+    ax1.set_ylabel("Numero de profesionales")
+    ax1.set_title("Profesiones vs Paises")
+    if canvas1: canvas1.get_tk_widget().pack_forget()
+    canvas1 = FigureCanvasTkAgg(fig1, master=left_panel)
+    canvas1.draw()
+    canvas1.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
 def update_grafico2(choice):
-    global archivo
-    if archivo[-4:] == ".sql":
-        global datos, profesiones, labels, sizes, colors, fig2, ax2, canvas2
-        data_profesion = datos[datos["Profesion"] == choice]
-        labels = sorted(list(set(data_profesion["Estado_Emocional"])))
-        sizes = []
-        for emocion in labels:
-            sizes.append(len(data_profesion[data_profesion["Estado_Emocional"] == emocion]))
-        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
-        #explode = (0.1, 0, 0, 0)  # explotar la porción 1
-        ax2.clear()
-        ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
-        ax2.axis('equal')  # para que el gráfico sea un círculo
-        ax2.set_title("Estado emocional vs profesion")
-        if canvas2: canvas2.get_tk_widget().pack_forget()
-        canvas2 = FigureCanvasTkAgg(fig2, master=right_panel)
-        canvas2.draw()
-        canvas2.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
+    global datos, profesiones, labels, sizes, colors, fig2, ax2, canvas2
+    data_profesion = datos[datos["Profesion"] == choice]
+    labels = sorted(list(set(data_profesion["Estado_Emocional"])))
+    sizes = []
+    for emocion in labels:
+        sizes.append(len(data_profesion[data_profesion["Estado_Emocional"] == emocion]))
+    colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+    ax2.clear()
+    ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+    ax2.axis('equal')  # para que el gráfico sea un círculo
+    ax2.set_title("Estado emocional vs profesion")
+    if canvas2: canvas2.get_tk_widget().pack_forget()
+    canvas2 = FigureCanvasTkAgg(fig2, master=right_panel)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
 # Función para mostrar los datos en la tabla
 def mostrar_datos(datos:pd.DataFrame):
@@ -382,6 +389,7 @@ def frame_3_button_event():
         data,columns = ejecutar_query_sqlite(archivo,"coordenadas")
         global datos
         datos = pd.DataFrame(data,columns=columns)
+        actualizar_opciones_rut()
     else:
         mensaje_acceso_bloqueado()
 
@@ -580,10 +588,11 @@ map_widget=mapas(third_frame_inf)
 label_rut = ctk.CTkLabel(third_frame_top, text="RUT",font=ctk.CTkFont(size=15, weight="bold"))
 label_rut.grid(row=0, column=0, padx=5, pady=5)
 optionmenu_1 = ctk.CTkOptionMenu(third_frame_top, dynamic_resizing=True,
-                                                        values=["Value 1", "Value 2", "Value Long Long Long"],command=lambda value:combo_event(value))
+                                                        values=["Value 1", "Value 2", "Value Long Long Long"],command=lambda value:combo_event1(value))
 optionmenu_1.grid(row=0, column=1, padx=5, pady=(5, 5))
 
-
+marker_1 = None
+marker_2 = None
 
 
 
